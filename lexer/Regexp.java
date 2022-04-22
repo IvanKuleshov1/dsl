@@ -3,6 +3,8 @@ package labs.lexer;
 import java.util.*;
 import java.util.regex.*;
 
+import static java.util.Collections.swap;
+
 
 public class Regexp {
 
@@ -40,8 +42,30 @@ public class Regexp {
     }
 
     public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
     public static final String ANSI_RED_BACKGROUND = "\u001B[41m";
     public static final String ANSI_RESET = "\u001B[0m";
+
+
+    /*  public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
+    public static final String ANSI_BLACK_BACKGROUND = "\u001B[40m";
+    public static final String ANSI_RED_BACKGROUND = "\u001B[41m";
+    public static final String ANSI_GREEN_BACKGROUND = "\u001B[42m";
+    public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
+    public static final String ANSI_BLUE_BACKGROUND = "\u001B[44m";
+    public static final String ANSI_PURPLE_BACKGROUND = "\u001B[45m";
+    public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
+    public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";*/
+
+
     static List<Token> tokens = new LinkedList<>();
     static List<String> strings = new LinkedList<>();
 
@@ -64,11 +88,13 @@ public class Regexp {
         System.out.println("num of strings: " + strings.size());
 
 
-        Regexp object = new Regexp();
+
         for (String string : strings) {
+            Regexp object = new Regexp();
             if (checkErrors(string)) {
                 object.lexer(string, strings.indexOf(string));
                 object.parser(string);
+
             } else {
                 Error error = new Error(null, string);
                 error.setType(error.recognizeErrorType(string));
@@ -115,21 +141,17 @@ public class Regexp {
                     Map<Integer, String> sortedMap = new TreeMap<Integer, String>(unsortedMap);
                     sortedMap.putAll(unsortedMap);
                     System.out.println(sortedMap);
-
                     for (Integer lex : sortedMap.keySet()) {
-                        if (lexemName.equals("VAR")&&
+                        if (lexemName.equals("VAR") &&
                                 (
-                                sortedMap.get(lex).equals("for") |
-                                sortedMap.get(lex).equals("do") |
-                                sortedMap.get(lex).equals("while") |
-                                sortedMap.get(lex).equals("while")
+                                        sortedMap.get(lex).equals("for") |
+                                                sortedMap.get(lex).equals("do") |
+                                                sortedMap.get(lex).equals("while") |
+                                                sortedMap.get(lex).equals("while")
                                 )
                         ) {
                             System.out.println("CYCLE FOUND");
-                            //parser(line);
-                        }
-                        else {
-
+                        } else {
                             tokens.add(new Token(lexemName, sortedMap.get(lex), stringNum, lex));
                         }
                     }
@@ -138,19 +160,117 @@ public class Regexp {
         }
     }
 
-
     public void parser(String line) {
         System.out.println("line from method:" + '\t' + line);
-        if(line.matches("^while.+?")){
+
+        if (line.matches("^while.+?")) {
+            List<Token> tokensLine = new LinkedList<>();
+
             System.out.println("im stupid recognizer but im found while");
-            for (Token tokenBufPArs:tokens) {
-                tokenBufPArs.getCurrentLineTokens(tokenBufPArs.getStringNum());
-                System.out.println("im stupid recognizer AND MY ANALYSATOR WORKS");
-                System.out.println("im alive");
+            System.out.println(ANSI_YELLOW+"\n"+"I WAS CALLED To FIND WHILE"+"\n"+ANSI_RESET);
+
+            boolean needItr = true;
+            boolean isVAR1th = false;
+            boolean isASSIGN2nd = false;
+            boolean isVAR3th = false;
+            for (Token tokenBufPArs : tokens) {
+                tokenBufPArs.getCurrentLineTokens(strings.indexOf(line));
+                tokenBufPArs.sortingTokensPos(strings.indexOf(line));
+                tokensLine.add(tokenBufPArs);
+            }
+
+            // while shit
+               /* System.out.println(
+                        ANSI_RED +
+                                tokensLine.get(i).getStringNum()+ '\t' + tokensLine.get(i).getPos() +
+                                +'\t' +
+                                "I FOUND WHILE VAR+ASSIGN_OP+VAR" +
+                                ANSI_RESET);*/
+
+            while (needItr) {
+                for (int i = 0; i < tokensLine.size(); i++) {
+                    if (tokensLine.get(i).getType().equals("VAR") && tokensLine.get(i).getPos() == 0) {
+                        isVAR1th = true;
+                    }
+                    if (tokensLine.get(i).getType().equals("ASSIGN_OP") && tokensLine.get(i).getPos() == 1) {
+                        System.out.println("TEST FOR ASSIGN_OP\n"+"Type: "+tokensLine.get(i).getType()+'\n'+"POS: "+ tokensLine.get(i).getPos());
+                        isASSIGN2nd = true;
+                    }
+                    if (tokensLine.get(i).getType().equals("VAR") && tokensLine.get(i).getPos() == 2) {
+                        isVAR3th = true;
+                    }
+                    if (isVAR1th == true &&
+                            isASSIGN2nd == true &&
+                            isVAR3th == true
+                    ) {
+                        needItr = false;
+                        break;
+                    }
+                    System.out.println('\n' + line + '\n' + "isVAR1th: " + isVAR1th + '\n' +
+                            "isASSIGN2nd: " + isASSIGN2nd + '\n' +
+                            "isVAR3th: " + isVAR3th + '\n' +
+                            "needItr: " + needItr + '\n' +
+                            i + '\n' +
+                            tokensLine.size()
+                    );
+                    if (i == tokensLine.size()-1) {
+                        needItr = false;
+                        break;
+                    }
+                }
+            }
+            if (isVAR1th == true &&
+                    isASSIGN2nd == true &&
+                    isVAR3th == true) {
+                System.out.println(
+                                ANSI_RED +
+                                '\t' +
+                                "I FOUND WHILE VAR+ASSIGN_OP+VAR" +
+                                ANSI_RESET);
+                System.out.println(
+                        ANSI_RED +
+                                '\t' +
+                                tokensLine +
+                                ANSI_RESET);
+                tokensLine.clear();
+                System.out.println(
+                        ANSI_RED +
+                                '\t' +
+                                tokensLine +
+                                ANSI_RESET);
 
             }
+            else {
+
+                Error error = new Error(null, line);
+                error.setType(error.recognizeErrorType(line));
+                System.out.println("I CAN OUTPUT ERRORS");
+                System.out.println(
+                        ANSI_RED +
+                                "Error in the " +
+                                strings.indexOf(line) +
+                                "th line" +
+                                '\n' +
+                                '\t' +
+                                ANSI_RESET +
+                                ANSI_RED_BACKGROUND +
+                                error.getType() +
+                                ANSI_RESET +
+                                '\n' +
+                                '\t' +
+                                "provided line: " +
+                                ANSI_RED +
+                                error.getValue()
+                                + ANSI_RESET);
+                tokensLine.clear();
+            }
+            tokensLine.clear();
         }
+
     }
+
+
+
 
     class Token {
 
@@ -164,6 +284,18 @@ public class Regexp {
             this.value = value;
             this.stringNum = stringNum;
             this.pos = pos;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
         }
 
         public int getStringNum() {
@@ -186,16 +318,36 @@ public class Regexp {
             return value;
         }
 
-        public Token getCurrentLineTokens(int numOfCalledLine){
+        public Token getCurrentLineTokens(int numOfCalledLine) {
 
-            for (Token token:tokens
-                 ) {
-                if(token.getStringNum()==numOfCalledLine){
+            for (Token token : tokens) {
+                if (token.getStringNum() == numOfCalledLine) {
                     return token;
                 }
             }
             return null;
         }
+
+
+        public void sortingTokensPos(int numOfCalledLine) {
+            ArrayList<Integer> array = new ArrayList<Integer>();
+            for (Token token : tokens) {
+                if (token.getStringNum() == numOfCalledLine) {
+                    // array.add(getCurrentLineTokens(numOfCalledLine).getPos());
+                    array.add(token.getPos());
+                    //System.out.println(ANSI_RED_BACKGROUND + token.getPos() + ANSI_RESET);//dem
+                }
+            }
+            /* Sorting of arraylist using Collections.sort*/
+            Collections.sort(array);
+            /* ArrayList after sorting*/
+            for (Token token : tokens) {
+                if (token.getStringNum() == numOfCalledLine) {
+                    token.setPos(array.indexOf(token.getPos()));
+                }
+            }
+        }
+
 
         @Override
         public String toString() {
@@ -245,10 +397,7 @@ public class Regexp {
             if (str.matches(".+?[=&]")) {
                 return "ASSIGN_OP_AT_THE_END_OF_THE_LINE_ERROR";
             }
-
             return "SOME_ERROR_THAT_I_CAN'T_RECOGNIZE";
         }
-
-
     }
 }
